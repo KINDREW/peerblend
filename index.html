@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PeerBlend: P2P LendHub</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 100px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      h1 {
+        margin-top: 0;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+
+      button {
+        background-color: #007bff;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      a {
+        color: #007bff;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>PeerBlend: P2P LendHub</h1>
+      <div id="auth-form">
+        <h2>Login</h2>
+        <input type="text" id="login-email" placeholder="Email" />
+        <input type="password" id="login-password" placeholder="Password" />
+        <button onclick="login()">Login</button>
+        <p>
+          Don't have an account? <a href="#" onclick="toggleForm()">Register</a>
+        </p>
+      </div>
+      <div id="register-form" style="display: none">
+        <h2>Register</h2>
+        <input type="text" id="register-username" placeholder="Username" />
+        <input type="text" id="register-email" placeholder="Email" />
+        <input type="password" id="register-password" placeholder="Password" />
+        <button onclick="register()">Register</button>
+        <p>
+          Already have an account? <a href="#" onclick="toggleForm()">Login</a>
+        </p>
+      </div>
+      <div id="loan-form" style="display: none">
+        <h2>Request Loan</h2>
+        <input type="number" id="loan-amount" placeholder="Loan Amount" />
+        <button onclick="requestLoan()">Request Loan</button>
+      </div>
+      <div id="loan-status" style="display: none">
+        <h2>Loan Status</h2>
+        <p id="loan-message"></p>
+      </div>
+    </div>
+
+    <script>
+      function toggleForm() {
+        var loginForm = document.getElementById("auth-form");
+        var registerForm = document.getElementById("register-form");
+        if (loginForm.style.display === "none") {
+          loginForm.style.display = "block";
+          registerForm.style.display = "none";
+        } else {
+          loginForm.style.display = "none";
+          registerForm.style.display = "block";
+        }
+      }
+
+      async function register() {
+        var username = document.getElementById("register-username").value;
+        var email = document.getElementById("register-email").value;
+        var password = document.getElementById("register-password").value;
+
+        var response = await fetch("http://localhost:3000/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username, email, password }),
+        });
+        var data = await response.json();
+        alert(data.message);
+      }
+
+      async function login() {
+        var email = document.getElementById("login-email").value;
+        var password = document.getElementById("login-password").value;
+
+        var response = await fetch("http://localhost:3000/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await response.json();
+        console.log(data);
+        if (response.status === 200) {
+          localStorage.setItem("token", data.token);
+          alert("Login successful");
+          console.log(localStorage);
+          showLoanForm();
+        } else {
+          alert(data.message);
+        }
+      }
+
+      async function requestLoan() {
+        var amount = document.getElementById("loan-amount").value;
+
+        var token = localStorage.getItem("token");
+
+        if (!token) {
+          alert("Please login first");
+          return;
+        }
+
+        var response = await fetch("http://localhost:3000/api/loans", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+          body: JSON.stringify({ amount }),
+        });
+        var data = await response.json();
+        alert(data.message);
+        console.log(data);
+      }
+
+      function showLoanForm() {
+        document.getElementById("loan-form").style.display = "block";
+      }
+    </script>
+  </body>
+</html>
